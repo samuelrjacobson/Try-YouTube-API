@@ -18,7 +18,8 @@ def youtube_search(query_term, max_results):
         maxResults=max_results,
     ).execute()
 
-    return search_response
+    video = search_response['items']
+    return video
 
 if __name__ == "__main__":
     query_term = sys.argv[1]
