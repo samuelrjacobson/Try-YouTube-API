@@ -7,7 +7,7 @@ DEVELOPER_KEY = config.API_KEY
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
-def youtube_search(query_term, max_results, page, npt, isRightPage):
+def youtube_search(query_term, max_results, npt, isRightPage):
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
         developerKey=DEVELOPER_KEY)
 
@@ -28,22 +28,37 @@ def youtube_search(query_term, max_results, page, npt, isRightPage):
 
     if(isRightPage):
         print(search_response["items"])
+        print()
     
-    return search_response["nextPageToken"]
+    return search_response["nextPageToken"]    
 
 if __name__ == "__main__":
     query_term = sys.argv[1]
     max_results = sys.argv[2]
-    page = int(sys.argv[3])
+    start_page = int(sys.argv[3])
+    end_page = int(sys.argv[4])
+
     try:
-        if(page < 1):
+        if(end_page < start_page):
+            print("Start page must be less than end page")
+        if(start_page < 1):
             print("Invalid page number")
-        elif(page == 1):
-            npt = youtube_search(query_term, max_results, page, None, True)
+        elif(start_page == 1):
+            # 1st page--print
+            npt = youtube_search(query_term, max_results, None, True)
+            # print these pages
+            for x in range(end_page - start_page):
+                npt = youtube_search(query_term, max_results, npt, True)
         else:
-            npt = youtube_search(query_term, max_results, page, None, False)
-            for i in range(page - 2):
-                npt = youtube_search(query_term, max_results, page, npt, False)
-            youtube_search(query_term, max_results, page, npt, True)
+            # 1st page--don't print
+            npt = youtube_search(query_term, max_results, None, False)
+            # don't print these pages
+            for i in range(start_page - 2): # -2 because we do 1 call before loop and 1 after
+                npt = youtube_search(query_term, max_results, npt, False)
+            # 1st page to print
+            npr = youtube_search(query_term, max_results, npt, True)
+            # print these pages
+            for y in range(end_page - start_page):
+                npt = youtube_search(query_term, max_results, npt, True)
     except HttpError as e:
         print('An HTTP error %d occurred: \n%s' % (type(e).__name__, str(e)))
