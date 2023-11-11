@@ -7,7 +7,7 @@ DEVELOPER_KEY = config.API_KEY
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
-def youtube_search(query_term, max_results, npt):
+def youtube_search(query_term, max_results, page, npt, isRightPage):
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
         developerKey=DEVELOPER_KEY)
 
@@ -26,16 +26,24 @@ def youtube_search(query_term, max_results, npt):
             pageToken = npt,
         ).execute()
 
-    print(search_response["items"])
-    print("\t")
+    if(isRightPage):
+        print(search_response["items"])
     
     return search_response["nextPageToken"]
 
 if __name__ == "__main__":
     query_term = sys.argv[1]
     max_results = sys.argv[2]
+    page = int(sys.argv[3])
     try:
-        npt = youtube_search(query_term, max_results, None)
-        youtube_search(query_term, max_results, npt)
+        if(page < 1):
+            print("Invalid page number")
+        elif(page == 1):
+            npt = youtube_search(query_term, max_results, page, None, True)
+        else:
+            npt = youtube_search(query_term, max_results, page, None, False)
+            for i in range(page - 2):
+                npt = youtube_search(query_term, max_results, page, npt, False)
+            youtube_search(query_term, max_results, page, npt, True)
     except HttpError as e:
         print('An HTTP error %d occurred: \n%s' % (type(e).__name__, str(e)))
